@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
+}
+
+enum EnrollmentMode {
+  Physical
+  Virtual
+}
+
+model Application {
+  id                   String            @id @default(cuid())
+  createdAt            DateTime          @default(now())
+  status               ApplicationStatus @default(pending)
+  email                String
+  surname              String
+  middleName           String            @default("")
+  firstName            String
+  dateOfBirth          String
+  nationality          String
+  gender               String
+  state                String
+  city                 String
+  homeAddress          String
+  profession           String
+  mobileNumber         String
+  modeOfEnrollment     EnrollmentMode
+  isSaved              Boolean
+  savedDate            String            @default("")
+  salvationExperience  String
+  lifeVision           String
+  reasonForEnrolling   String
+  gateOfInfluence      String
+  attendanceAgreement  Boolean
+  graduationAgreement  Boolean
+  feeAgreement         Boolean           @default(false)
+  characterChallenges  String            @default("")
+  refereeName          String
+  refereePhone         String
+  paymentStatus        PaymentStatus     @default(unpaid)
+  paymentAmount        Int               @default(3150)
+  selarReference       String            @default("")
+  paidAt               DateTime?
+
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([gateOfInfluence])
+  @@index([createdAt])
+  @@index([email])
+}
