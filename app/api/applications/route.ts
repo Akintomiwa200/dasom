@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addApplication, readApplications } from "@/lib/db";
 import { REGISTRATION_FEE_NGN, dasomReference, getSelarCheckoutUrl } from "@/lib/payment";
+import { databaseErrorResponse } from "@/lib/api-errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,11 +40,20 @@ export async function POST(req: NextRequest) {
     }, { status: 201 });
   } catch (err) {
     console.error(err);
+    const dbError = databaseErrorResponse(err);
+    if (dbError) return dbError;
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
 export async function GET() {
-  const apps = await readApplications();
-  return NextResponse.json(apps);
+  try {
+    const apps = await readApplications();
+    return NextResponse.json(apps);
+  } catch (err) {
+    console.error(err);
+    const dbError = databaseErrorResponse(err);
+    if (dbError) return dbError;
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }

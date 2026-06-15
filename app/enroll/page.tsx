@@ -7,6 +7,59 @@ import { dasomReference, formatNaira, getSelarCheckoutUrl, REGISTRATION_FEE_NGN 
 const GATES = ["Education","Government","Politics/Leadership","Media","Arts & Entertainment","Business/Finance","Religion","Family","Law","Sports","Health","Technology"];
 const STEPS = ["Personal Info","Spiritual Journey","Commitment","Referee"];
 
+type EnrollFieldProps = {
+  label: string;
+  id: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  textarea?: boolean;
+  children?: React.ReactNode;
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+};
+
+function EnrollField({
+  label,
+  id,
+  type = "text",
+  placeholder = "",
+  required = true,
+  textarea = false,
+  children,
+  value,
+  error,
+  onChange,
+}: EnrollFieldProps) {
+  return (
+    <div className="field">
+      <label htmlFor={children ? undefined : id}>
+        {label}
+        {required && <span className="required"> *</span>}
+      </label>
+      {children || (textarea ? (
+        <textarea
+          id={id}
+          rows={4}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      ) : (
+        <input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      ))}
+      {error && <div className="field-error">{error}</div>}
+    </div>
+  );
+}
+
 export default function EnrollPage() {
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<"form" | "payment" | "done">("form");
@@ -124,18 +177,12 @@ export default function EnrollPage() {
     };
   }, [phase, appId]);
 
-  const Field = ({ label, id, type="text", placeholder="", required=true, textarea=false, children }: {
-    label: string; id: string; type?: string; placeholder?: string; required?: boolean; textarea?: boolean; children?: React.ReactNode;
-  }) => (
-    <div className="field">
-      <label>{label}{required && <span className="required"> *</span>}</label>
-      {children || (textarea
-        ? <textarea rows={4} placeholder={placeholder} value={(form as Record<string, string | boolean>)[id] as string} onChange={e=>set(id, e.target.value)} />
-        : <input type={type} placeholder={placeholder} value={(form as Record<string, string | boolean>)[id] as string} onChange={e=>set(id, e.target.value)} />
-      )}
-      {errors[id] && <div className="field-error">{errors[id]}</div>}
-    </div>
-  );
+  const field = (id: keyof typeof form) => ({
+    id,
+    value: String(form[id] ?? ""),
+    error: errors[id],
+    onChange: (v: string) => set(id, v),
+  });
 
   if (phase === "done") return (
     <div className="page-canvas success-screen">
@@ -207,38 +254,38 @@ export default function EnrollPage() {
               <h2 className="display-sm" style={{ marginBottom: 8 }}>Personal Information</h2>
               <p className="body-sm" style={{ marginBottom: 32 }}>Basic details about you.</p>
               <div className="form-grid-2">
-                <Field label="Surname" id="surname" placeholder="e.g. Adebayo" />
-                <Field label="First Name" id="firstName" placeholder="e.g. Samuel" />
+                <EnrollField label="Surname" placeholder="e.g. Adebayo" {...field("surname")} />
+                <EnrollField label="First Name" placeholder="e.g. Samuel" {...field("firstName")} />
               </div>
-              <Field label="Middle Name" id="middleName" placeholder="Optional" required={false} />
-              <Field label="Email Address" id="email" type="email" placeholder="you@example.com" />
+              <EnrollField label="Middle Name" placeholder="Optional" required={false} {...field("middleName")} />
+              <EnrollField label="Email Address" type="email" placeholder="you@example.com" {...field("email")} />
               <div className="form-grid-2">
-                <Field label="Date of Birth" id="dateOfBirth" type="date" />
-                <Field label="Mobile Number" id="mobileNumber" placeholder="+234 xxx xxx xxxx" />
+                <EnrollField label="Date of Birth" type="date" {...field("dateOfBirth")} />
+                <EnrollField label="Mobile Number" placeholder="+234 xxx xxx xxxx" {...field("mobileNumber")} />
               </div>
               <div className="form-grid-2">
-                <Field label="Gender" id="gender">
-                  <select value={form.gender} onChange={e=>set("gender", e.target.value)}>
+                <EnrollField label="Gender" {...field("gender")}>
+                  <select id="gender" value={form.gender} onChange={(e) => set("gender", e.target.value)}>
                     <option value="">Select gender</option>
                     <option>Male</option>
                     <option>Female</option>
                   </select>
-                </Field>
-                <Field label="Nationality" id="nationality" placeholder="e.g. Nigerian" />
+                </EnrollField>
+                <EnrollField label="Nationality" placeholder="e.g. Nigerian" {...field("nationality")} />
               </div>
               <div className="form-grid-2">
-                <Field label="State" id="state" placeholder="e.g. Ogun" />
-                <Field label="City" id="city" placeholder="e.g. Ago-Iwoye" />
+                <EnrollField label="State" placeholder="e.g. Ogun" {...field("state")} />
+                <EnrollField label="City" placeholder="e.g. Ago-Iwoye" {...field("city")} />
               </div>
-              <Field label="Home Address" id="homeAddress" placeholder="Full address" />
-              <Field label="Profession / Occupation" id="profession" placeholder="e.g. Engineer, Student, Teacher" />
-              <Field label="Mode of Enrollment" id="modeOfEnrollment">
-                <select value={form.modeOfEnrollment} onChange={e=>set("modeOfEnrollment", e.target.value)}>
+              <EnrollField label="Home Address" placeholder="Full address" {...field("homeAddress")} />
+              <EnrollField label="Profession / Occupation" placeholder="e.g. Engineer, Student, Teacher" {...field("profession")} />
+              <EnrollField label="Mode of Enrollment" {...field("modeOfEnrollment")}>
+                <select id="modeOfEnrollment" value={form.modeOfEnrollment} onChange={(e) => set("modeOfEnrollment", e.target.value)}>
                   <option value="">Select mode</option>
                   <option value="Physical">Physical (Ago-Iwoye only)</option>
                   <option value="Virtual">Virtual (outside Ago-Iwoye)</option>
                 </select>
-              </Field>
+              </EnrollField>
               {errors.modeOfEnrollment && <div className="field-error" style={{ marginTop: -12, marginBottom: 12 }}>{errors.modeOfEnrollment}</div>}
             </div>
           )}
@@ -247,7 +294,7 @@ export default function EnrollPage() {
             <div>
               <h2 className="display-sm" style={{ marginBottom: 8 }}>Spiritual Journey</h2>
               <p className="body-sm" style={{ marginBottom: 32 }}>Tell us about your faith and calling.</p>
-              <Field label="Are You Saved?" id="isSaved">
+              <EnrollField label="Are You Saved?" {...field("isSaved")}>
                 <div style={{ display: "flex", gap: 12 }}>
                   {["yes", "no"].map(v => (
                     <button
@@ -260,19 +307,19 @@ export default function EnrollPage() {
                     </button>
                   ))}
                 </div>
-              </Field>
+              </EnrollField>
               {form.isSaved === "yes" && (
-                <Field label="Date of Salvation" id="savedDate" type="date" required={false} />
+                <EnrollField label="Date of Salvation" type="date" required={false} {...field("savedDate")} />
               )}
-              <Field label="Briefly Narrate Your Salvation Experience" id="salvationExperience" textarea placeholder="Share your testimony..." />
-              <Field label="What Is Your Life's Vision?" id="lifeVision" textarea placeholder="What has God put in your heart to accomplish?" />
-              <Field label="Why Have You Chosen to Enroll at DASOM?" id="reasonForEnrolling" textarea placeholder="What draws you to this programme?" />
-              <Field label="Choose Your Gate of Influence" id="gateOfInfluence">
-                <select value={form.gateOfInfluence} onChange={e=>set("gateOfInfluence", e.target.value)}>
+              <EnrollField label="Briefly Narrate Your Salvation Experience" textarea placeholder="Share your testimony..." {...field("salvationExperience")} />
+              <EnrollField label="What Is Your Life's Vision?" textarea placeholder="What has God put in your heart to accomplish?" {...field("lifeVision")} />
+              <EnrollField label="Why Have You Chosen to Enroll at DASOM?" textarea placeholder="What draws you to this programme?" {...field("reasonForEnrolling")} />
+              <EnrollField label="Choose Your Gate of Influence" {...field("gateOfInfluence")}>
+                <select id="gateOfInfluence" value={form.gateOfInfluence} onChange={(e) => set("gateOfInfluence", e.target.value)}>
                   <option value="">Select your gate</option>
                   {GATES.map(g => <option key={g}>{g}</option>)}
                 </select>
-              </Field>
+              </EnrollField>
             </div>
           )}
 
@@ -321,8 +368,8 @@ export default function EnrollPage() {
             <div>
               <h2 className="display-sm" style={{ marginBottom: 8 }}>Referee Information</h2>
               <p className="body-sm" style={{ marginBottom: 32 }}>Please provide a referee who knows you and can speak to your character.</p>
-              <Field label="Referee's Full Name" id="refereeName" placeholder="Full name" />
-              <Field label="Referee's Mobile Number" id="refereePhone" placeholder="+234 xxx xxx xxxx" />
+              <EnrollField label="Referee's Full Name" placeholder="Full name" {...field("refereeName")} />
+              <EnrollField label="Referee's Mobile Number" placeholder="+234 xxx xxx xxxx" {...field("refereePhone")} />
               <div className="card" style={{ marginTop: 8, background: "var(--canvas-soft)" }}>
                 <div className="caption-uppercase" style={{ marginBottom: 8 }}>Review Before Submitting</div>
                 <div className="review-grid">
